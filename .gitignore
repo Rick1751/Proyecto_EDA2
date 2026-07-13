@@ -1,0 +1,15 @@
+.venv/
+venv/
+env/
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+arbol_akinator.png
+grafo_*.png
+
+Thumbs.db
+.DS_Store
+
