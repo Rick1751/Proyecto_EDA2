@@ -13,12 +13,16 @@ class PantallaResultado:
         
         self.personaje_adivinado = ""
         self.metodo_usado = ""
-        self.preguntas_realizadas = 0
+        self.preguntas_arbol = 0
+        self.preguntas_grafo = 0
+        self.entro_grafo = False
 
-    def configurar_victoria(self, nombre, metodo, preguntas_realizadas=0):
+    def configurar_victoria(self, nombre, metodo, preguntas_arbol=0, preguntas_grafo=0, entro_grafo=False):
         self.personaje_adivinado = nombre
         self.metodo_usado = metodo
-        self.preguntas_realizadas = preguntas_realizadas
+        self.preguntas_arbol = preguntas_arbol
+        self.preguntas_grafo = preguntas_grafo
+        self.entro_grafo = entro_grafo
 
     def manejar_evento(self, evento):
         if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
@@ -33,7 +37,9 @@ class PantallaResultado:
     def reiniciar(self):
         self.personaje_adivinado = ""
         self.metodo_usado = ""
-        self.preguntas_realizadas = 0
+        self.preguntas_arbol = 0
+        self.preguntas_grafo = 0
+        self.entro_grafo = False
 
     def dibujar(self, pantalla):
         pantalla.fill(config.NEGRO)
@@ -51,8 +57,18 @@ class PantallaResultado:
         texto_metodo = self.fuente_texto.render(f"Método utilizado: {self.metodo_usado}", True, config.BLANCO)
         pantalla.blit(texto_metodo, (config.ANCHO // 2 - texto_metodo.get_width() // 2, 320))
         
-        texto_preguntas = self.fuente_texto.render(f"Preguntas realizadas: {self.preguntas_realizadas}", True, config.BLANCO)
-        pantalla.blit(texto_preguntas, (config.ANCHO // 2 - texto_preguntas.get_width() // 2, 370))
+        texto_arbol = self.fuente_texto.render(f"Preguntas en el árbol: {self.preguntas_arbol}", True, config.BLANCO)
+        pantalla.blit(texto_arbol, (config.ANCHO // 2 - texto_arbol.get_width() // 2, 360))
+
+        texto_grafo = self.fuente_texto.render(f"Preguntas en el grafo: {self.preguntas_grafo}", True, config.BLANCO)
+        pantalla.blit(texto_grafo, (config.ANCHO // 2 - texto_grafo.get_width() // 2, 400))
+
+        texto_grafo_usado = self.fuente_texto.render(
+            f"Entró al grafo: {'Sí' if self.entro_grafo else 'No'}",
+            True,
+            config.BLANCO,
+        )
+        pantalla.blit(texto_grafo_usado, (config.ANCHO // 2 - texto_grafo_usado.get_width() // 2, 440))
 
         pygame.draw.rect(pantalla, config.BLANCO, self.btn_jugar)
         texto_btn_jugar = self.fuente_btn.render("JUGAR OTRA VEZ", True, config.NEGRO)

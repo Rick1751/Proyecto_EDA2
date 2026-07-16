@@ -27,17 +27,17 @@ class PantallaPreguntas:
         
         # 3. Inicializamos el árbol pasándole los datos cargados
         self.nodo_actual = construir_arbol_datos(lista_participantes, 0)
-        self.preguntas_realizadas = 0
+        self.preguntas_arbol = 0
         
     def manejar_evento(self, evento):
         if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
-            self.preguntas_realizadas += 1
-
             if self.btn_si.collidepoint(evento.pos):
+                self.preguntas_arbol += 1
                 self.nodo_actual = self.nodo_actual["si"] 
                 self.verificar_estado()
                 
             elif self.btn_no.collidepoint(evento.pos):
+                self.preguntas_arbol += 1
                 self.nodo_actual = self.nodo_actual["no"]
                 self.verificar_estado()
 
@@ -45,13 +45,19 @@ class PantallaPreguntas:
         # Tu script devuelve {"tipo": "hoja", "nombre": "..."} cuando queda 1 persona
         if self.nodo_actual.get("tipo") == "hoja":
             pantalla_res = self.gestor.pantallas["resultado"]
-            pantalla_res.configurar_victoria(self.nodo_actual["nombre"], "Árbol de Decisión", self.preguntas_realizadas)
+            pantalla_res.configurar_victoria(
+                self.nodo_actual["nombre"],
+                "Árbol de Decisión",
+                preguntas_arbol=self.preguntas_arbol,
+                preguntas_grafo=0,
+                entro_grafo=False,
+            )
             self.gestor.cambiar_a("resultado")
             
         # Tu script devuelve {"tipo": "grupo", "nombres": [...]} cuando hay empate
         elif self.nodo_actual.get("tipo") == "grupo":
             pantalla_grafo = self.gestor.pantallas["grafo"]
-            pantalla_grafo.cargar_candidatos(self.nodo_actual["nombres"], self.preguntas_realizadas)
+            pantalla_grafo.cargar_candidatos(self.nodo_actual["nombres"], self.preguntas_arbol)
             self.gestor.cambiar_a("transicion")
 
     def actualizar(self):
@@ -60,7 +66,7 @@ class PantallaPreguntas:
     def reiniciar(self):
         lista_participantes = cargar_personas(self.ruta_archivo)
         self.nodo_actual = construir_arbol_datos(lista_participantes, 0)
-        self.preguntas_realizadas = 0
+        self.preguntas_arbol = 0
 
     def dibujar(self, pantalla):
         pantalla.fill(config.NEGRO)

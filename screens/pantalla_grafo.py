@@ -14,25 +14,33 @@ class PantallaGrafo:
         self.candidatos_empatados = []
         self.indice_actual = 0
         self.candidato_actual = ""
-        self.preguntas_realizadas = 0
+        self.preguntas_arbol = 0
+        self.preguntas_grafo = 0
 
-    def cargar_candidatos(self, lista, preguntas_realizadas=0):
+    def cargar_candidatos(self, lista, preguntas_arbol=0):
         self.candidatos_empatados = lista
         self.indice_actual = 0
         self.candidato_actual = self.candidatos_empatados[self.indice_actual]
-        self.preguntas_realizadas = preguntas_realizadas
+        self.preguntas_arbol = preguntas_arbol
+        self.preguntas_grafo = 0
 
     def manejar_evento(self, evento):
         if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
-            self.preguntas_realizadas += 1
-
             if self.btn_si.collidepoint(evento.pos):
+                self.preguntas_grafo += 1
                 # Encontró al personaje
                 pantalla_res = self.gestor.pantallas["resultado"]
-                pantalla_res.configurar_victoria(self.candidato_actual, "Árbol + Grafo (DFS)", self.preguntas_realizadas)
+                pantalla_res.configurar_victoria(
+                    self.candidato_actual,
+                    "Árbol + Grafo (DFS)",
+                    preguntas_arbol=self.preguntas_arbol,
+                    preguntas_grafo=self.preguntas_grafo,
+                    entro_grafo=True,
+                )
                 self.gestor.cambiar_a("resultado")
                 
             elif self.btn_no.collidepoint(evento.pos):
+                self.preguntas_grafo += 1
                 # Pasa al siguiente candidato de la lista
                 self.indice_actual += 1
                 if self.indice_actual < len(self.candidatos_empatados):
@@ -48,7 +56,8 @@ class PantallaGrafo:
         self.candidatos_empatados = []
         self.indice_actual = 0
         self.candidato_actual = ""
-        self.preguntas_realizadas = 0
+        self.preguntas_arbol = 0
+        self.preguntas_grafo = 0
 
     def dibujar(self, pantalla):
         pantalla.fill(config.NEGRO)
