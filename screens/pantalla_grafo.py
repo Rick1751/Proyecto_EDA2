@@ -14,18 +14,22 @@ class PantallaGrafo:
         self.candidatos_empatados = []
         self.indice_actual = 0
         self.candidato_actual = ""
+        self.preguntas_realizadas = 0
 
-    def cargar_candidatos(self, lista):
+    def cargar_candidatos(self, lista, preguntas_realizadas=0):
         self.candidatos_empatados = lista
         self.indice_actual = 0
         self.candidato_actual = self.candidatos_empatados[self.indice_actual]
+        self.preguntas_realizadas = preguntas_realizadas
 
     def manejar_evento(self, evento):
         if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
+            self.preguntas_realizadas += 1
+
             if self.btn_si.collidepoint(evento.pos):
                 # Encontró al personaje
                 pantalla_res = self.gestor.pantallas["resultado"]
-                pantalla_res.configurar_victoria(self.candidato_actual, "Árbol + Grafo (DFS)")
+                pantalla_res.configurar_victoria(self.candidato_actual, "Árbol + Grafo (DFS)", self.preguntas_realizadas)
                 self.gestor.cambiar_a("resultado")
                 
             elif self.btn_no.collidepoint(evento.pos):
@@ -39,6 +43,12 @@ class PantallaGrafo:
 
     def actualizar(self):
         pass
+
+    def reiniciar(self):
+        self.candidatos_empatados = []
+        self.indice_actual = 0
+        self.candidato_actual = ""
+        self.preguntas_realizadas = 0
 
     def dibujar(self, pantalla):
         pantalla.fill(config.NEGRO)

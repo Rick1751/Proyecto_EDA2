@@ -15,6 +15,9 @@ class PantallaPrevia:
     def manejar_evento(self, evento):
         if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
             if self.btn_comenzar.collidepoint(evento.pos):
+                self.gestor.pantallas["preguntas"].reiniciar()
+                self.gestor.pantallas["grafo"].reiniciar()
+                self.gestor.pantallas["resultado"].reiniciar()
                 self.gestor.cambiar_a("preguntas")
 
     def actualizar(self):

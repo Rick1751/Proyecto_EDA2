@@ -15,11 +15,10 @@ class PantallaResultado:
         self.metodo_usado = ""
         self.preguntas_realizadas = 0
 
-    def configurar_victoria(self, nombre, metodo):
+    def configurar_victoria(self, nombre, metodo, preguntas_realizadas=0):
         self.personaje_adivinado = nombre
         self.metodo_usado = metodo
-        # Aquí puedes sumar un contador global si lo tienes, por ahora es ilustrativo
-        self.preguntas_realizadas += 1 
+        self.preguntas_realizadas = preguntas_realizadas
 
     def manejar_evento(self, evento):
         if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
@@ -30,6 +29,11 @@ class PantallaResultado:
 
     def actualizar(self):
         pass
+
+    def reiniciar(self):
+        self.personaje_adivinado = ""
+        self.metodo_usado = ""
+        self.preguntas_realizadas = 0
 
     def dibujar(self, pantalla):
         pantalla.fill(config.NEGRO)
