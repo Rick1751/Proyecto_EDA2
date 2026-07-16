@@ -1,16 +1,17 @@
 import pygame
 import config
+from ui.estilo import COLOR_ACENTO, COLOR_BORDE, COLOR_SUBTEXTO, COLOR_TEXTO, dibujar_boton, dibujar_fondo_tecnologico, dibujar_panel, centrar_texto
 
 class PantallaGrafo:
     def __init__(self, gestor):
         self.gestor = gestor
-        self.fuente_titulo = pygame.font.SysFont(None, 35)
-        self.fuente_pregunta = pygame.font.SysFont(None, 50)
-        self.fuente_btn = pygame.font.SysFont(None, 40)
-        self.fuente_mensaje = pygame.font.SysFont(None, 32)
+        self.fuente_titulo = pygame.font.SysFont("Segoe UI", 42, bold=True)
+        self.fuente_pregunta = pygame.font.SysFont("Segoe UI", 34, bold=True)
+        self.fuente_btn = pygame.font.SysFont("Segoe UI", 28, bold=True)
+        self.fuente_mensaje = pygame.font.SysFont("Segoe UI", 28)
         
-        self.btn_si = pygame.Rect(200, 450, 150, 60)
-        self.btn_no = pygame.Rect(450, 450, 150, 60)
+        self.btn_si = pygame.Rect(200, 445, 170, 56)
+        self.btn_no = pygame.Rect(430, 445, 170, 56)
         self.btn_menu = pygame.Rect(config.ANCHO // 2 - 100, 480, 200, 50)
         
         self.candidatos_empatados = []
@@ -70,50 +71,34 @@ class PantallaGrafo:
         self.fallo_localizacion = False
 
     def dibujar(self, pantalla):
-        pantalla.fill(config.NEGRO)
+        dibujar_fondo_tecnologico(pantalla)
 
         if self.fallo_localizacion:
-            titulo = self.fuente_titulo.render("NO SE PUDO LOCALIZAR AL PERSONAJE", True, config.NARANJA)
-            pantalla.blit(titulo, (config.ANCHO // 2 - titulo.get_width() // 2, 180))
+            panel = pygame.Rect(70, 170, 660, 230)
+            dibujar_panel(pantalla, panel, relleno=(12, 42, 68), borde=COLOR_BORDE, radio=16)
+            centrar_texto(pantalla, self.fuente_titulo, "NO SE PUDO LOCALIZAR AL PERSONAJE", 190, COLOR_ACENTO)
+            centrar_texto(pantalla, self.fuente_mensaje, "Se agotaron todos los candidatos del grafo.", 245, COLOR_TEXTO)
+            centrar_texto(pantalla, self.fuente_mensaje, "Esto parece un intento inválido o una inconsistencia en los datos.", 285, COLOR_SUBTEXTO)
 
-            mensaje = self.fuente_mensaje.render(
-                "Se agotaron todos los candidatos del grafo.",
-                True,
-                config.BLANCO,
-            )
-            pantalla.blit(mensaje, (config.ANCHO // 2 - mensaje.get_width() // 2, 240))
-
-            mensaje2 = self.fuente_mensaje.render(
-                "Esto parece un intento inválido o una inconsistencia en los datos.",
-                True,
-                config.BLANCO,
-            )
-            pantalla.blit(mensaje2, (config.ANCHO // 2 - mensaje2.get_width() // 2, 280))
-
-            pygame.draw.rect(pantalla, config.BLANCO, self.btn_menu)
-            texto_btn = self.fuente_btn.render("VOLVER AL MENÚ", True, config.NEGRO)
-            pantalla.blit(texto_btn, (self.btn_menu.x + 15, self.btn_menu.y + 12))
+            dibujar_boton(pantalla, self.btn_menu, self.fuente_btn, "VOLVER AL MENÚ", fondo=(12, 42, 68), borde=COLOR_BORDE)
             return
 
-        titulo = self.fuente_titulo.render("FASE DE GRAFO (DFS)", True, config.NARANJA)
-        pantalla.blit(titulo, (config.ANCHO // 2 - titulo.get_width() // 2, 50))
+        centrar_texto(pantalla, self.fuente_titulo, "FASE DE GRAFO (DFS)", 52, COLOR_TEXTO)
+        panel = pygame.Rect(70, 120, 660, 280)
+        dibujar_panel(pantalla, panel, relleno=(12, 42, 68), borde=COLOR_BORDE, radio=16)
 
         # Nodos visuales
-        pygame.draw.circle(pantalla, config.BLANCO, (300, 250), 30, 2)
-        pygame.draw.circle(pantalla, config.NARANJA, (400, 250), 40, 4) 
-        pygame.draw.circle(pantalla, config.BLANCO, (500, 250), 30, 2)
-        pygame.draw.line(pantalla, config.BLANCO, (330, 250), (360, 250), 2)
-        pygame.draw.line(pantalla, config.BLANCO, (440, 250), (470, 250), 2)
+        pygame.draw.circle(pantalla, COLOR_BORDE, (300, 250), 30, 2)
+        pygame.draw.circle(pantalla, COLOR_ACENTO, (400, 250), 40, 4) 
+        pygame.draw.circle(pantalla, COLOR_BORDE, (500, 250), 30, 2)
+        pygame.draw.line(pantalla, COLOR_BORDE, (330, 250), (360, 250), 2)
+        pygame.draw.line(pantalla, COLOR_BORDE, (440, 250), (470, 250), 2)
 
         # Pregunta dinámica
         pregunta = f"¿Tu personaje es {self.candidato_actual}?"
-        texto_pregunta = self.fuente_pregunta.render(pregunta, True, config.BLANCO)
-        pantalla.blit(texto_pregunta, (config.ANCHO // 2 - texto_pregunta.get_width() // 2, 350))
+        texto_pregunta = self.fuente_pregunta.render(pregunta, True, COLOR_TEXTO)
+        pantalla.blit(texto_pregunta, (config.ANCHO // 2 - texto_pregunta.get_width() // 2, 340))
+        centrar_texto(pantalla, self.fuente_mensaje, f"Preguntas en grafo: {self.preguntas_grafo}", 392, COLOR_SUBTEXTO)
 
-        pygame.draw.rect(pantalla, config.NARANJA, self.btn_si)
-        texto_si = self.fuente_btn.render("SÍ", True, config.NEGRO)
-        pantalla.blit(texto_si, (self.btn_si.x + 55, self.btn_si.y + 15))
-
-        pygame.draw.rect(pantalla, config.BLANCO, self.btn_no)
-        texto_no = self.fuente_btn.render("NO", True, config.NEGRO)
-        pantalla.blit(texto_no, (self.btn_no.x + 50, self.btn_no.y + 15))
+        dibujar_boton(pantalla, self.btn_si, self.fuente_btn, "SÍ", fondo=(12, 42, 68), borde=COLOR_ACENTO)
+        dibujar_boton(pantalla, self.btn_no, self.fuente_btn, "NO", fondo=(12, 42, 68), borde=COLOR_BORDE)

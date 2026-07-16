@@ -2,16 +2,17 @@ import pygame
 import os
 import unicodedata
 import config
+from ui.estilo import COLOR_ACENTO, COLOR_BORDE, COLOR_SUBTEXTO, COLOR_TEXTO, dibujar_boton, dibujar_fondo_tecnologico, dibujar_panel, centrar_texto
 
 class PantallaResultado:
     def __init__(self, gestor):
         self.gestor = gestor
-        self.fuente_grande = pygame.font.SysFont(None, 60)
-        self.fuente_texto = pygame.font.SysFont(None, 35)
-        self.fuente_btn = pygame.font.SysFont(None, 30)
+        self.fuente_grande = pygame.font.SysFont("Segoe UI", 50, bold=True)
+        self.fuente_texto = pygame.font.SysFont("Segoe UI", 28)
+        self.fuente_btn = pygame.font.SysFont("Segoe UI", 24, bold=True)
         
-        self.btn_jugar = pygame.Rect(200, 500, 200, 50)
-        self.btn_menu = pygame.Rect(420, 500, 200, 50)
+        self.btn_jugar = pygame.Rect(180, 505, 230, 52)
+        self.btn_menu = pygame.Rect(390, 505, 230, 52)
         
         self.personaje_adivinado = ""
         self.metodo_usado = ""
@@ -84,42 +85,32 @@ class PantallaResultado:
         return None
 
     def dibujar(self, pantalla):
-        pantalla.fill(config.NEGRO)
+        dibujar_fondo_tecnologico(pantalla)
+
+        panel = pygame.Rect(60, 170, 680, 290)
+        dibujar_panel(pantalla, panel, relleno=(12, 42, 68), borde=COLOR_BORDE, radio=16)
 
         caja_foto = pygame.Rect(config.ANCHO - 175, 25, 140, 140)
-        pygame.draw.rect(pantalla, config.BLANCO, caja_foto, 2)
+        dibujar_panel(pantalla, caja_foto, relleno=(12, 42, 68), borde=COLOR_BORDE, radio=14)
         if self.imagen_personaje is not None:
             imagen = pygame.transform.smoothscale(self.imagen_personaje, (136, 136))
             pantalla.blit(imagen, (caja_foto.x + 2, caja_foto.y + 2))
         else:
-            texto_foto = self.fuente_texto.render("Sin foto", True, config.BLANCO)
+            texto_foto = self.fuente_texto.render("Sin foto", True, COLOR_SUBTEXTO)
             pantalla.blit(texto_foto, (caja_foto.x + 18, caja_foto.y + 55))
 
         # Nombre real
-        texto_nombre = self.fuente_grande.render(f"¡Es {self.personaje_adivinado}!", True, config.NARANJA)
-        pantalla.blit(texto_nombre, (config.ANCHO // 2 - texto_nombre.get_width() // 2, 230))
+        centrar_texto(pantalla, self.fuente_grande, f"¡Es {self.personaje_adivinado}!", 215, COLOR_ACENTO)
 
         # Método real
-        texto_metodo = self.fuente_texto.render(f"Método utilizado: {self.metodo_usado}", True, config.BLANCO)
-        pantalla.blit(texto_metodo, (config.ANCHO // 2 - texto_metodo.get_width() // 2, 320))
+        centrar_texto(pantalla, self.fuente_texto, f"Método utilizado: {self.metodo_usado}", 280, COLOR_TEXTO)
         
-        texto_arbol = self.fuente_texto.render(f"Preguntas en el árbol: {self.preguntas_arbol}", True, config.BLANCO)
-        pantalla.blit(texto_arbol, (config.ANCHO // 2 - texto_arbol.get_width() // 2, 360))
+        centrar_texto(pantalla, self.fuente_texto, f"Preguntas en el árbol: {self.preguntas_arbol}", 320, COLOR_SUBTEXTO)
 
-        texto_grafo = self.fuente_texto.render(f"Preguntas en el grafo: {self.preguntas_grafo}", True, config.BLANCO)
-        pantalla.blit(texto_grafo, (config.ANCHO // 2 - texto_grafo.get_width() // 2, 400))
+        centrar_texto(pantalla, self.fuente_texto, f"Preguntas en el grafo: {self.preguntas_grafo}", 358, COLOR_SUBTEXTO)
 
-        texto_grafo_usado = self.fuente_texto.render(
-            f"Entró al grafo: {'Sí' if self.entro_grafo else 'No'}",
-            True,
-            config.BLANCO,
-        )
-        pantalla.blit(texto_grafo_usado, (config.ANCHO // 2 - texto_grafo_usado.get_width() // 2, 440))
+        centrar_texto(pantalla, self.fuente_texto, f"Entró al grafo: {'Sí' if self.entro_grafo else 'No'}", 396, COLOR_TEXTO)
 
-        pygame.draw.rect(pantalla, config.BLANCO, self.btn_jugar)
-        texto_btn_jugar = self.fuente_btn.render("JUGAR OTRA VEZ", True, config.NEGRO)
-        pantalla.blit(texto_btn_jugar, (self.btn_jugar.x + 12, self.btn_jugar.y + 15))
+        dibujar_boton(pantalla, self.btn_jugar, self.fuente_btn, "JUGAR OTRA VEZ", fondo=(12, 42, 68), borde=COLOR_ACENTO)
 
-        pygame.draw.rect(pantalla, config.BLANCO, self.btn_menu)
-        texto_btn_menu = self.fuente_btn.render("VOLVER AL MENÚ", True, config.NEGRO)
-        pantalla.blit(texto_btn_menu, (self.btn_menu.x + 15, self.btn_menu.y + 15))
+        dibujar_boton(pantalla, self.btn_menu, self.fuente_btn, "VOLVER AL MENÚ", fondo=(12, 42, 68), borde=COLOR_BORDE)

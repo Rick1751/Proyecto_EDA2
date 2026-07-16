@@ -1,6 +1,7 @@
 import pygame
 import os
 import config
+from ui.estilo import COLOR_ACENTO, COLOR_BORDE, COLOR_SUBTEXTO, COLOR_TEXTO, dibujar_boton, dibujar_fondo_tecnologico, dibujar_panel, centrar_texto
 
 # Importamos las dos funciones que necesitas de tu script
 from core.generar_arbol_manual import construir_arbol_datos, cargar_personas
@@ -8,11 +9,12 @@ from core.generar_arbol_manual import construir_arbol_datos, cargar_personas
 class PantallaPreguntas:
     def __init__(self, gestor):
         self.gestor = gestor
-        self.fuente_pregunta = pygame.font.SysFont(None, 48)
-        self.fuente_btn = pygame.font.SysFont(None, 40)
+        self.fuente_titulo = pygame.font.SysFont("Segoe UI", 46, bold=True)
+        self.fuente_pregunta = pygame.font.SysFont("Segoe UI", 38, bold=True)
+        self.fuente_btn = pygame.font.SysFont("Segoe UI", 28, bold=True)
         
-        self.btn_si = pygame.Rect(200, 400, 150, 60)
-        self.btn_no = pygame.Rect(450, 400, 150, 60)
+        self.btn_si = pygame.Rect(200, 420, 180, 56)
+        self.btn_no = pygame.Rect(420, 420, 180, 56)
         
         # 1. Calculamos la ruta absoluta de forma dinámica
         # Esto busca la carpeta del proyecto y entra a "data" de forma segura
@@ -69,18 +71,19 @@ class PantallaPreguntas:
         self.preguntas_arbol = 0
 
     def dibujar(self, pantalla):
-        pantalla.fill(config.NEGRO)
+        dibujar_fondo_tecnologico(pantalla)
+
+        centrar_texto(pantalla, self.fuente_titulo, "ANÁLISIS DEL EXPEDIENTE", 60, COLOR_TEXTO)
+        panel = pygame.Rect(70, 150, 660, 185)
+        dibujar_panel(pantalla, panel, relleno=(12, 42, 68), borde=COLOR_BORDE, radio=16)
 
         # Muestra la pregunta real leyendo la clave del diccionario
         pregunta = str(self.nodo_actual.get("pregunta", ""))
-        texto_pregunta = self.fuente_pregunta.render(pregunta, True, config.BLANCO)
-        pantalla.blit(texto_pregunta, (config.ANCHO // 2 - texto_pregunta.get_width() // 2, 200))
+        texto_pregunta = self.fuente_pregunta.render(pregunta, True, COLOR_TEXTO)
+        pantalla.blit(texto_pregunta, (config.ANCHO // 2 - texto_pregunta.get_width() // 2, 215))
+
+        centrar_texto(pantalla, self.fuente_pregunta, f"Pregunta del árbol #{self.preguntas_arbol + 1}", 170, COLOR_ACENTO)
 
         # Dibujar botones
-        pygame.draw.rect(pantalla, config.NARANJA, self.btn_si)
-        texto_si = self.fuente_btn.render("SÍ", True, config.NEGRO)
-        pantalla.blit(texto_si, (self.btn_si.x + 55, self.btn_si.y + 15))
-
-        pygame.draw.rect(pantalla, config.BLANCO, self.btn_no)
-        texto_no = self.fuente_btn.render("NO", True, config.NEGRO)
-        pantalla.blit(texto_no, (self.btn_no.x + 50, self.btn_no.y + 15))
+        dibujar_boton(pantalla, self.btn_si, self.fuente_btn, "SÍ", fondo=(12, 42, 68), borde=COLOR_ACENTO)
+        dibujar_boton(pantalla, self.btn_no, self.fuente_btn, "NO", fondo=(12, 42, 68), borde=COLOR_BORDE)
