@@ -12,6 +12,10 @@ class PantallaInicio:
     def __init__(self, gestor):
         self.gestor = gestor
 
+        self.volumen = 0.35
+        self.mostrando_control_volumen = False
+        self.arrastrando_volumen = False
+
         # Fuentes
         self.fuente_titulo = pygame.font.SysFont(
             "Segoe UI",
@@ -87,6 +91,43 @@ class PantallaInicio:
             alto_boton
         )
 
+        self.btn_volumen = pygame.Rect(
+            config.ANCHO - 126,
+            22,
+            104,
+            34
+        )
+
+        self.panel_volumen = pygame.Rect(
+            config.ANCHO - 220,
+            68,
+            180,
+            96
+        )
+
+        self.btn_volumen_menos = pygame.Rect(
+            self.panel_volumen.x + 14,
+            self.panel_volumen.y + 44,
+            28,
+            28
+        )
+
+        self.btn_volumen_mas = pygame.Rect(
+            self.panel_volumen.right - 42,
+            self.panel_volumen.y + 44,
+            28,
+            28
+        )
+
+        self.barra_volumen = pygame.Rect(
+            self.panel_volumen.x + 48,
+            self.panel_volumen.y + 54,
+            84,
+            8
+        )
+
+        self._actualizar_volumen(self.volumen)
+
         self.estrellas = []
         self._crear_estrellas()
         # Animación del radar
@@ -120,6 +161,47 @@ class PantallaInicio:
             [720, 530, 1, 1],
             [120, 520, 1, 1],
         ]
+
+    def _actualizar_volumen(self, valor):
+        self.volumen = max(0.0, min(1.0, valor))
+        try:
+            pygame.mixer.music.set_volume(self.volumen)
+        except pygame.error:
+            pass
+
+    def _volumen_desde_pos(self, x):
+        progreso = (x - self.barra_volumen.x) / max(1, self.barra_volumen.w)
+        return max(0.0, min(1.0, progreso))
+
+    def _manejar_control_volumen(self, evento):
+        if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
+            if self.btn_volumen.collidepoint(evento.pos):
+                self.mostrando_control_volumen = not self.mostrando_control_volumen
+                return True
+
+            if not self.mostrando_control_volumen:
+                return False
+
+            if self.btn_volumen_menos.collidepoint(evento.pos):
+                self._actualizar_volumen(self.volumen - 0.1)
+                return True
+
+            if self.btn_volumen_mas.collidepoint(evento.pos):
+                self._actualizar_volumen(self.volumen + 0.1)
+                return True
+
+            if self.barra_volumen.collidepoint(evento.pos):
+                self.arrastrando_volumen = True
+                self._actualizar_volumen(self._volumen_desde_pos(evento.pos[0]))
+                return True
+
+        elif evento.type == pygame.MOUSEBUTTONUP and evento.button == 1:
+            self.arrastrando_volumen = False
+        elif evento.type == pygame.MOUSEMOTION and self.arrastrando_volumen:
+            self._actualizar_volumen(self._volumen_desde_pos(evento.pos[0]))
+            return True
+
+        return False
 
     def _dibujar_fondo(self, pantalla):
         alto = config.ALTO
@@ -390,6 +472,9 @@ class PantallaInicio:
         )
 
     def manejar_evento(self, evento):
+        if self._manejar_control_volumen(evento):
+            return
+
         if (
             evento.type == pygame.MOUSEBUTTONDOWN
             and evento.button == 1
@@ -650,6 +735,135 @@ class PantallaInicio:
                 137
             )
         )
+
+        # Boton de volumen
+        mouse = pygame.mouse.get_pos()
+        hover_volumen = self.btn_volumen.collidepoint(mouse)
+        base_volumen = self.color_panel_hover if hover_volumen or self.mostrando_control_volumen else self.color_panel
+        borde_volumen = self.color_borde if hover_volumen or self.mostrando_control_volumen else self.color_borde_suave
+
+        pygame.draw.rect(
+            pantalla,
+            (0, 0, 0),
+            self.btn_volumen.move(3, 4),
+            border_radius=10
+        )
+        pygame.draw.rect(
+            pantalla,
+            base_volumen,
+            self.btn_volumen,
+            border_radius=10
+        )
+        pygame.draw.rect(
+            pantalla,
+            borde_volumen,
+            self.btn_volumen,
+            2,
+            border_radius=10
+        )
+
+        texto_volumen = self.fuente_botones_chicos.render(
+            "VOLUMEN",
+            True,
+            self.color_texto
+        )
+        pantalla.blit(
+            texto_volumen,
+            (
+                self.btn_volumen.centerx - texto_volumen.get_width() // 2,
+                self.btn_volumen.centery - texto_volumen.get_height() // 2
+            )
+        )
+
+        if self.mostrando_control_volumen:
+            pygame.draw.rect(
+                pantalla,
+                self.color_panel,
+                self.panel_volumen,
+                border_radius=12
+            )
+            pygame.draw.rect(
+                pantalla,
+                self.color_borde,
+                self.panel_volumen,
+                2,
+                border_radius=12
+            )
+
+            etiqueta = self.fuente_botones_chicos.render(
+                f"{int(self.volumen * 100)}%",
+                True,
+                self.color_texto
+            )
+            pantalla.blit(
+                etiqueta,
+                (
+                    self.panel_volumen.centerx - etiqueta.get_width() // 2,
+                    self.panel_volumen.y + 10
+                )
+            )
+
+            pygame.draw.rect(
+                pantalla,
+                self.color_borde_suave,
+                self.barra_volumen,
+                border_radius=6
+            )
+
+            ancho_activo = int(self.barra_volumen.w * self.volumen)
+            if ancho_activo > 0:
+                barra_activa = pygame.Rect(
+                    self.barra_volumen.x,
+                    self.barra_volumen.y,
+                    ancho_activo,
+                    self.barra_volumen.h
+                )
+                pygame.draw.rect(
+                    pantalla,
+                    self.color_acento,
+                    barra_activa,
+                    border_radius=6
+                )
+
+            perilla_x = self.barra_volumen.x + ancho_activo
+            perilla = pygame.Rect(0, 0, 14, 18)
+            perilla.center = (perilla_x, self.barra_volumen.centery)
+            pygame.draw.rect(
+                pantalla,
+                self.color_texto,
+                perilla,
+                border_radius=5
+            )
+
+            for boton, simbolo in (
+                (self.btn_volumen_menos, "-"),
+                (self.btn_volumen_mas, "+"),
+            ):
+                pygame.draw.rect(
+                    pantalla,
+                    self.color_panel_hover,
+                    boton,
+                    border_radius=8
+                )
+                pygame.draw.rect(
+                    pantalla,
+                    self.color_borde_suave,
+                    boton,
+                    2,
+                    border_radius=8
+                )
+                texto_boton = self.fuente_botones.render(
+                    simbolo,
+                    True,
+                    self.color_texto
+                )
+                pantalla.blit(
+                    texto_boton,
+                    (
+                        boton.centerx - texto_boton.get_width() // 2,
+                        boton.centery - texto_boton.get_height() // 2 - 2
+                    )
+                )
 
         # Botones
         self._dibujar_boton(

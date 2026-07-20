@@ -1,7 +1,10 @@
 # main.py
 
+from pathlib import Path
 import sys
+
 import pygame
+
 import config
 from screens.gestor_pantallas import GestorPantallas
 from screens.pantalla_acerca_de import PantallaAcercaDe
@@ -14,20 +17,41 @@ from screens.pantalla_resultado import PantallaResultado
 from screens.pantalla_transicion import PantallaTransicion
 
 
+
+def iniciar_musica_fondo():
+    try:
+        pygame.mixer.init()
+    except pygame.error:
+        return
+
+    ruta_base = Path(__file__).resolve().parent / Path(config.MUSICA_FONDO)
+    rutas_posibles = [
+        ruta_base,
+        ruta_base.with_suffix(".ogg"),
+        ruta_base.with_suffix(".wav"),
+        ruta_base.with_suffix(".mp3"),
+    ]
+
+    for ruta_musica in rutas_posibles:
+        if not ruta_musica.exists():
+            continue
+
+        try:
+            pygame.mixer.music.load(str(ruta_musica))
+            pygame.mixer.music.set_volume(0.35)
+            pygame.mixer.music.play(-1)
+            return
+        except pygame.error:
+            continue
+
+    print("No se pudo cargar la musica de fondo.")
+
 def main():
+    pygame.mixer.pre_init(44100, -16, 2, 512)
     pygame.init()
-
-    pantalla = pygame.display.set_mode(
-        (
-            config.ANCHO,
-            config.ALTO
-        )
-    )
-
-    pygame.display.set_caption(
-        config.TITULO
-    )
-
+    iniciar_musica_fondo()
+    pantalla = pygame.display.set_mode((config.ANCHO, config.ALTO))
+    pygame.display.set_caption(config.TITULO)
     reloj = pygame.time.Clock()
 
     # --------------------------------------------------
