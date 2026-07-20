@@ -89,6 +89,21 @@ class PantallaInicio:
 
         self.estrellas = []
         self._crear_estrellas()
+        # Animación del radar
+        self.angulo_radar = 0
+        self.velocidad_radar = 1.8
+
+        # Puntos detectados dentro del radar
+        self.puntos_radar = [
+            (-48, -10),
+            (-23, 18),
+            (5, -15),
+            (33, 10),
+            (52, -10),
+            (-15, -38),
+            (24, -34),
+            (-40, 30),
+        ]
 
     def _crear_estrellas(self):
         self.estrellas = [
@@ -305,6 +320,66 @@ class PantallaInicio:
                 9,
                 1
             )
+        # Línea principal del radar
+        angulo_rad = math.radians(
+            self.angulo_radar
+        )
+
+        x_final = centro_local[0] + int(
+            math.cos(angulo_rad) * radio
+        )
+
+        y_final = centro_local[1] + int(
+            math.sin(angulo_rad) * radio
+        )
+
+        pygame.draw.line(
+            superficie_globo,
+            (103, 231, 255, 230),
+            centro_local,
+            (x_final, y_final),
+            3
+        )
+
+        # Estela del radar
+        for desplazamiento in range(
+            8,
+            55,
+            8
+        ):
+            angulo_estela = math.radians(
+                self.angulo_radar
+                - desplazamiento
+            )
+
+            x_estela = centro_local[0] + int(
+                math.cos(angulo_estela) * radio
+            )
+
+            y_estela = centro_local[1] + int(
+                math.sin(angulo_estela) * radio
+            )
+
+            alpha = max(
+                20,
+                150 - desplazamiento * 2
+            )
+
+            pygame.draw.line(
+                superficie_globo,
+                (
+                    103,
+                    231,
+                    255,
+                    alpha
+                ),
+                centro_local,
+                (
+                    x_estela,
+                    y_estela
+                ),
+                2
+            )
 
         pantalla.blit(
             superficie_globo,
@@ -345,7 +420,10 @@ class PantallaInicio:
                 sys.exit()
 
     def actualizar(self):
-        pass
+        self.angulo_radar += self.velocidad_radar
+
+        if self.angulo_radar >= 360:
+            self.angulo_radar = 0
 
     def _dibujar_boton(
         self,
