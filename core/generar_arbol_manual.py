@@ -194,6 +194,9 @@ def cargar_personas_paralelo(ruta_datos, usar_multiprocesamiento=True):
     
     logger.info(f"Cargadas {len(personas)} personas con multiprocesamiento")
     return personas
+
+
+def pregunta_separa(personas, col_excel):
     """Devuelve True si la pregunta 'col_excel' divide a 'personas' en dos
     grupos no vacios (SI / NO). Si todos responden igual, no separa nada."""
     tiene_si = any(p[col_excel] == "si" for p in personas)
