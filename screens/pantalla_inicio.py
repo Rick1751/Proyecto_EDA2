@@ -591,7 +591,8 @@ class PantallaInicio:
         self._dibujar_boton(
             pantalla,
             self.btn_acerca_de,
-            "ACERCA DEL PROYECTO"
+            "INSTRUCCIONES",
+            "INSTRUCCIONES DE JUEGO"
         )
 
         self._dibujar_boton(

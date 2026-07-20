@@ -1,7 +1,11 @@
+# screens/pantalla_preguntas.py
 import os
 import pygame
 import config
-from core.generar_arbol_manual import construir_arbol_datos, cargar_personas
+from core.generar_arbol_manual import (
+    construir_arbol_datos,
+    cargar_personas,
+)
 from ui.estilo import (
     COLOR_ACENTO,
     COLOR_BORDE,
@@ -18,7 +22,10 @@ class PantallaPreguntas:
     def __init__(self, gestor):
         self.gestor = gestor
 
-        # Fuentes
+        # --------------------------------------------------
+        # FUENTES
+        # --------------------------------------------------
+
         self.fuente_titulo = pygame.font.SysFont(
             "Segoe UI",
             46,
@@ -27,7 +34,7 @@ class PantallaPreguntas:
 
         self.fuente_pregunta = pygame.font.SysFont(
             "Segoe UI",
-            38,
+            36,
             bold=True
         )
 
@@ -43,33 +50,49 @@ class PantallaPreguntas:
             bold=True
         )
 
-        # Botones
+        # --------------------------------------------------
+        # BOTONES
+        # --------------------------------------------------
+
+        ancho_boton = 190
+        alto_boton = 58
+        separacion = 50
+
+        ancho_total = ancho_boton * 2 + separacion
+        inicio_x = config.ANCHO // 2 - ancho_total // 2
+
         self.btn_si = pygame.Rect(
-            200,
-            420,
-            180,
-            56
+            inicio_x,
+            410,
+            ancho_boton,
+            alto_boton
         )
 
         self.btn_no = pygame.Rect(
-            420,
-            420,
-            180,
-            56
+            inicio_x + ancho_boton + separacion,
+            410,
+            ancho_boton,
+            alto_boton
         )
 
-        # Barra de progreso
+        # --------------------------------------------------
+        # BARRA DE PROGRESO
+        # --------------------------------------------------
+
         self.rect_barra_fondo = pygame.Rect(
-            150,
-            535,
+            config.ANCHO // 2 - 250,
+            525,
             500,
             22
         )
 
-        # Número aproximado máximo de preguntas del árbol
+        # Cantidad máxima estimada de preguntas del árbol
         self.max_preguntas_estimadas = 6
 
-        # Ruta del archivo CSV
+        # --------------------------------------------------
+        # RUTA DEL ARCHIVO CSV
+        # --------------------------------------------------
+
         ruta_script = os.path.abspath(__file__)
 
         ruta_proyecto = os.path.dirname(
@@ -82,7 +105,10 @@ class PantallaPreguntas:
             "Formulario_proyecto_eda__respuestas__editado.csv"
         )
 
-        # Cargar participantes y construir árbol
+        # --------------------------------------------------
+        # CARGAR DATOS Y CONSTRUIR ÁRBOL
+        # --------------------------------------------------
+
         lista_participantes = cargar_personas(
             self.ruta_archivo
         )
@@ -94,30 +120,50 @@ class PantallaPreguntas:
 
         self.preguntas_arbol = 0
 
+    # --------------------------------------------------
+    # EVENTOS
+    # --------------------------------------------------
+
     def manejar_evento(self, evento):
         if (
-            evento.type == pygame.MOUSEBUTTONDOWN
-            and evento.button == 1
+            evento.type != pygame.MOUSEBUTTONDOWN
+            or evento.button != 1
         ):
-            if self.btn_si.collidepoint(evento.pos):
-                self.preguntas_arbol += 1
+            return
 
-                self.nodo_actual = self.nodo_actual["si"]
+        # Evitar errores si por alguna razón ya no estamos
+        # en un nodo de pregunta
+        if self.nodo_actual.get("tipo") != "pregunta":
+            return
 
-                self.verificar_estado()
+        if self.btn_si.collidepoint(evento.pos):
+            self.preguntas_arbol += 1
 
-            elif self.btn_no.collidepoint(evento.pos):
-                self.preguntas_arbol += 1
+            self.nodo_actual = self.nodo_actual["si"]
 
-                self.nodo_actual = self.nodo_actual["no"]
+            self.verificar_estado()
 
-                self.verificar_estado()
+        elif self.btn_no.collidepoint(evento.pos):
+            self.preguntas_arbol += 1
+
+            self.nodo_actual = self.nodo_actual["no"]
+
+            self.verificar_estado()
+
+    # --------------------------------------------------
+    # VERIFICACIÓN DEL ESTADO
+    # --------------------------------------------------
 
     def verificar_estado(self):
-        if self.nodo_actual.get("tipo") == "hoja":
-            pantalla_res = self.gestor.pantallas["resultado"]
+        tipo_nodo = self.nodo_actual.get("tipo")
 
-            pantalla_res.configurar_victoria(
+        # Se identificó directamente a una persona
+        if tipo_nodo == "hoja":
+            pantalla_resultado = (
+                self.gestor.pantallas["resultado"]
+            )
+
+            pantalla_resultado.configurar_victoria(
                 self.nodo_actual["nombre"],
                 "Árbol de Decisión",
                 preguntas_arbol=self.preguntas_arbol,
@@ -127,8 +173,11 @@ class PantallaPreguntas:
 
             self.gestor.cambiar_a("resultado")
 
-        elif self.nodo_actual.get("tipo") == "grupo":
-            pantalla_grafo = self.gestor.pantallas["grafo"]
+        # Quedó un grupo de candidatos
+        elif tipo_nodo == "grupo":
+            pantalla_grafo = (
+                self.gestor.pantallas["grafo"]
+            )
 
             pantalla_grafo.cargar_candidatos(
                 self.nodo_actual["nombres"],
@@ -139,6 +188,10 @@ class PantallaPreguntas:
 
     def actualizar(self):
         pass
+
+    # --------------------------------------------------
+    # REINICIAR PARTIDA
+    # --------------------------------------------------
 
     def reiniciar(self):
         lista_participantes = cargar_personas(
@@ -152,14 +205,133 @@ class PantallaPreguntas:
 
         self.preguntas_arbol = 0
 
+    # --------------------------------------------------
+    # FORMATEAR PREGUNTAS
+    # --------------------------------------------------
+
+    def _formatear_pregunta(self, pregunta):
+        """
+        Convierte las preguntas originales del árbol
+        a una redacción uniforme con 'tu personaje'.
+
+        Ejemplo:
+        'Eres mujer?' -> '¿Tu personaje es mujer?'
+        """
+
+        pregunta = str(pregunta).strip()
+
+        reemplazos = {
+            "Eres mujer?":
+                "¿Tu personaje es mujer?",
+
+            "Usas lentes?":
+                "¿Tu personaje usa lentes?",
+
+            "Eres alto?":
+                "¿Tu personaje es alto?",
+
+            "Tienes el cabello largo?":
+                "¿Tu personaje tiene el cabello largo?",
+
+            "Tienes el cabello rizado?":
+                "¿Tu personaje tiene el cabello rizado?",
+
+            "Tienes barba?":
+                "¿Tu personaje tiene barba?",
+
+            "Eres de contextura delgada?":
+                "¿Tu personaje es de contextura delgada?",
+
+            "Usas gorra?":
+                "¿Tu personaje usa gorra?",
+
+            "Usas saco o hoodie?":
+                "¿Tu personaje usa saco o hoodie?",
+
+            "Eres foraneo?":
+                "¿Tu personaje es foráneo?",
+
+            "Eres foráneo?":
+                "¿Tu personaje es foráneo?",
+
+            "Sabes conducir?":
+                "¿Tu personaje sabe conducir?",
+
+            "Vas al gimnasio?":
+                "¿Tu personaje va al gimnasio?",
+
+            "Participas en el coro?":
+                "¿Tu personaje participa en el coro?",
+
+            "Te gusta apostar?":
+                "¿A tu personaje le gusta apostar?",
+
+            "Participas frecuentemente en clase?":
+                "¿Tu personaje participa frecuentemente en clase?",
+
+            "Te consideras extrovertido?":
+                "¿Tu personaje es una persona extrovertida?",
+
+            "Sueles llegar tarde?":
+                "¿Tu personaje suele llegar tarde a clases?",
+
+            "Te sientas adelante?":
+                "¿Tu personaje se sienta normalmente adelante?",
+
+            "Te sientas atras?":
+                "¿Tu personaje se sienta normalmente atrás?",
+
+            "Te sientas atrás?":
+                "¿Tu personaje se sienta normalmente atrás?",
+
+            "Primera letra del nombre A-H?":
+                "¿El nombre de tu personaje empieza entre la A y la H?",
+
+            "Primera letra del apellido A-M?":
+                "¿El apellido de tu personaje empieza entre la A y la M?",
+
+            "Usa tablet?":
+                "¿Tu personaje usa tablet para tomar apuntes?",
+        }
+
+        # Si existe una redacción exacta, usarla
+        if pregunta in reemplazos:
+            return reemplazos[pregunta]
+
+        # Respaldo genérico para preguntas no registradas
+        pregunta_sin_signos = pregunta
+
+        if pregunta_sin_signos.startswith("¿"):
+            pregunta_sin_signos = pregunta_sin_signos[1:]
+
+        if pregunta_sin_signos.endswith("?"):
+            pregunta_sin_signos = pregunta_sin_signos[:-1]
+
+        if not pregunta_sin_signos:
+            return ""
+
+        pregunta_sin_signos = (
+            pregunta_sin_signos[0].lower()
+            + pregunta_sin_signos[1:]
+        )
+
+        return (
+            f"¿Tu personaje "
+            f"{pregunta_sin_signos}?"
+        )
+
+    # --------------------------------------------------
+    # BARRA DE PROGRESO
+    # --------------------------------------------------
+
     def _dibujar_barra_progreso(self, pantalla):
-        # Evita que la barra supere el 100 %
         progreso = min(
-            self.preguntas_arbol / self.max_preguntas_estimadas,
+            self.preguntas_arbol
+            / self.max_preguntas_estimadas,
             1.0
         )
 
-        # Fondo de la barra
+        # Fondo
         pygame.draw.rect(
             pantalla,
             (7, 25, 43),
@@ -176,9 +348,10 @@ class PantallaPreguntas:
             border_radius=11
         )
 
-        # Parte completada
+        # Avance
         ancho_completado = int(
-            self.rect_barra_fondo.width * progreso
+            self.rect_barra_fondo.width
+            * progreso
         )
 
         if ancho_completado > 0:
@@ -196,7 +369,7 @@ class PantallaPreguntas:
                 border_radius=11
             )
 
-        # Texto de progreso
+        # Porcentaje
         porcentaje = int(progreso * 100)
 
         texto = self.fuente_progreso.render(
@@ -210,9 +383,13 @@ class PantallaPreguntas:
             (
                 config.ANCHO // 2
                 - texto.get_width() // 2,
-                self.rect_barra_fondo.y - 32
+                self.rect_barra_fondo.y - 31
             )
         )
+
+    # --------------------------------------------------
+    # DIBUJAR PREGUNTA CENTRADA
+    # --------------------------------------------------
 
     def _dibujar_pregunta_centrada(
         self,
@@ -220,15 +397,15 @@ class PantallaPreguntas:
         texto,
         panel
     ):
-        # Si la pregunta cabe, se dibuja en una sola línea
+        max_ancho = panel.width - 80
+
         superficie = self.fuente_pregunta.render(
             texto,
             True,
             COLOR_TEXTO
         )
 
-        max_ancho = panel.width - 70
-
+        # Si cabe en una sola línea
         if superficie.get_width() <= max_ancho:
             pantalla.blit(
                 superficie,
@@ -242,7 +419,7 @@ class PantallaPreguntas:
 
             return
 
-        # Si es demasiado larga, dividirla aproximadamente
+        # Dividir automáticamente en varias líneas
         palabras = texto.split()
         lineas = []
         linea_actual = ""
@@ -252,14 +429,17 @@ class PantallaPreguntas:
                 f"{linea_actual} {palabra}".strip()
             )
 
-            superficie_prueba = self.fuente_pregunta.render(
-                prueba,
-                True,
-                COLOR_TEXTO
+            superficie_prueba = (
+                self.fuente_pregunta.render(
+                    prueba,
+                    True,
+                    COLOR_TEXTO
+                )
             )
 
             if (
-                superficie_prueba.get_width() <= max_ancho
+                superficie_prueba.get_width()
+                <= max_ancho
                 or not linea_actual
             ):
                 linea_actual = prueba
@@ -271,15 +451,24 @@ class PantallaPreguntas:
             lineas.append(linea_actual)
 
         separacion = 48
-        alto_total = len(lineas) * separacion
 
-        y_inicial = panel.centery - alto_total // 2
+        alto_total = (
+            len(lineas) * separacion
+        )
+
+        y_inicial = (
+            panel.centery
+            - alto_total // 2
+            + 4
+        )
 
         for indice, linea in enumerate(lineas):
-            superficie_linea = self.fuente_pregunta.render(
-                linea,
-                True,
-                COLOR_TEXTO
+            superficie_linea = (
+                self.fuente_pregunta.render(
+                    linea,
+                    True,
+                    COLOR_TEXTO
+                )
             )
 
             pantalla.blit(
@@ -287,25 +476,32 @@ class PantallaPreguntas:
                 (
                     panel.centerx
                     - superficie_linea.get_width() // 2,
-                    y_inicial + indice * separacion
+                    y_inicial
+                    + indice * separacion
                 )
             )
+
+    # --------------------------------------------------
+    # DIBUJO PRINCIPAL
+    # --------------------------------------------------
 
     def dibujar(self, pantalla):
         dibujar_fondo_tecnologico(pantalla)
 
+        # Título
         centrar_texto(
             pantalla,
             self.fuente_titulo,
             "ANÁLISIS DEL EXPEDIENTE",
-            60,
+            58,
             COLOR_TEXTO
         )
 
+        # Panel de pregunta
         panel = pygame.Rect(
             70,
             150,
-            660,
+            config.ANCHO - 140,
             185
         )
 
@@ -317,21 +513,25 @@ class PantallaPreguntas:
             radio=16
         )
 
-        # Pregunta actual sin texto redundante
-        pregunta = str(
-            self.nodo_actual.get(
-                "pregunta",
-                ""
+        # Obtener y adaptar la pregunta
+        pregunta_original = self.nodo_actual.get(
+            "pregunta",
+            ""
+        )
+
+        pregunta_formateada = (
+            self._formatear_pregunta(
+                pregunta_original
             )
         )
 
         self._dibujar_pregunta_centrada(
             pantalla,
-            pregunta,
+            pregunta_formateada,
             panel
         )
 
-        # Botones
+        # Botón SÍ
         dibujar_boton(
             pantalla,
             self.btn_si,
@@ -341,6 +541,7 @@ class PantallaPreguntas:
             borde=COLOR_ACENTO
         )
 
+        # Botón NO
         dibujar_boton(
             pantalla,
             self.btn_no,
@@ -350,7 +551,7 @@ class PantallaPreguntas:
             borde=COLOR_BORDE
         )
 
-        # Barra de progreso
+        # Progreso
         self._dibujar_barra_progreso(
             pantalla
         )

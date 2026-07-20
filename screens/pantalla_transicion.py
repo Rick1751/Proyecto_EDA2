@@ -30,8 +30,8 @@ class PantallaTransicion:
         dibujar_panel(pantalla, panel, relleno=(12, 42, 68), borde=COLOR_BORDE, radio=16)
 
         # Textos de alerta
-        linea1 = self.fuente_texto.render("El árbol no puede diferenciarlos completamente.", True, COLOR_SUBTEXTO)
-        linea2 = self.fuente_texto.render("Activando búsqueda mediante grafo...", True, COLOR_ACENTO)
+        linea1 = self.fuente_texto.render("No se puedo diferenciar al participante.", True, COLOR_SUBTEXTO)
+        linea2 = self.fuente_texto.render("Activando búsqueda profunda...", True, COLOR_ACENTO)
 
         pantalla.blit(linea1, (config.ANCHO // 2 - linea1.get_width() // 2, 235))
         pantalla.blit(linea2, (config.ANCHO // 2 - linea2.get_width() // 2, 285))
