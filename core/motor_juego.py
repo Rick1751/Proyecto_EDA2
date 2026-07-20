@@ -18,13 +18,18 @@ La clase MotorJuego se encarga de:
 
 IMPORTANTE sobre bloqueos: cargar los datos y construir el arbol se hace
 UNA sola vez, al crear el MotorJuego, y eso pasa ANTES de que arranque el
-bucle principal de Pygame (el "while ejecutando" de main.py). Como el
-archivo de datos es chico, esto toma una fraccion de segundo y no genera
-ningun congelamiento perceptible en la ventana.
+bucle principal de Pygame (el "while ejecutando" de main.py). Con
+multiprocesamiento, la carga es optimizada usando threads para operaciones
+de I/O.
 """
 
 import sys
 import os
+import logging
+
+# Configurar logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Agregamos la carpeta "core" al path de Python para poder importar
 # generar_arbol_manual.py como si fuera un modulo comun, sin depender de
@@ -46,9 +51,18 @@ class MotorJuego:
     """Guarda todo el estado del juego: el arbol completo, el grafo actual
     (si estamos en modo grafo) y el avance del jugador a traves de ambos."""
 
-    def __init__(self, ruta_datos):
+    def __init__(self, ruta_datos, usar_multiprocesamiento=True):
         # 1) Cargar personas desde el archivo (se hace una sola vez)
-        self.personas = logica.cargar_personas(ruta_datos)
+        # Usa multiprocesamiento para optimizar I/O
+        try:
+            if usar_multiprocesamiento:
+                self.personas = logica.cargar_personas_paralelo(ruta_datos, usar_multiprocesamiento=True)
+            else:
+                self.personas = logica.cargar_personas(ruta_datos)
+            logger.info(f"Cargadas {len(self.personas)} personas exitosamente")
+        except Exception as e:
+            logger.error(f"Error cargando personas: {e}")
+            self.personas = logica.cargar_personas(ruta_datos)
 
         # 2) Construir el arbol completo en memoria (estructura de datos).
         #    Esto reemplaza a construir_arbol() del script original, que

@@ -1,10 +1,12 @@
 # screens/pantalla_preguntas.py
 import os
 import pygame
+import logging
 import config
 from core.generar_arbol_manual import (
     construir_arbol_datos,
     cargar_personas,
+    cargar_personas_paralelo,
 )
 from ui.estilo import (
     COLOR_ACENTO,
@@ -16,6 +18,8 @@ from ui.estilo import (
     dibujar_fondo_tecnologico,
     dibujar_panel,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class PantallaPreguntas:
@@ -109,9 +113,16 @@ class PantallaPreguntas:
         # CARGAR DATOS Y CONSTRUIR ÁRBOL
         # --------------------------------------------------
 
-        lista_participantes = cargar_personas(
-            self.ruta_archivo
-        )
+        try:
+            lista_participantes = cargar_personas_paralelo(
+                self.ruta_archivo,
+                usar_multiprocesamiento=True
+            )
+        except Exception as e:
+            logger.warning(f"Error en carga paralela: {e}, usando carga secuencial")
+            lista_participantes = cargar_personas(
+                self.ruta_archivo
+            )
 
         self.nodo_actual = construir_arbol_datos(
             lista_participantes,
@@ -194,9 +205,16 @@ class PantallaPreguntas:
     # --------------------------------------------------
 
     def reiniciar(self):
-        lista_participantes = cargar_personas(
-            self.ruta_archivo
-        )
+        try:
+            lista_participantes = cargar_personas_paralelo(
+                self.ruta_archivo,
+                usar_multiprocesamiento=True
+            )
+        except Exception as e:
+            logger.warning(f"Error en carga paralela: {e}, usando carga secuencial")
+            lista_participantes = cargar_personas(
+                self.ruta_archivo
+            )
 
         self.nodo_actual = construir_arbol_datos(
             lista_participantes,

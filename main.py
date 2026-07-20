@@ -2,10 +2,13 @@
 
 from pathlib import Path
 import sys
+import atexit
+import logging
 
 import pygame
 
 import config
+from core.multiprocesamiento import obtener_manager, limpiar_manager
 from screens.gestor_pantallas import GestorPantallas
 from screens.pantalla_acerca_de import PantallaAcercaDe
 from screens.pantalla_grafo import PantallaGrafo
@@ -15,6 +18,13 @@ from screens.pantalla_preguntas import PantallaPreguntas
 from screens.pantalla_previa import PantallaPrevia
 from screens.pantalla_resultado import PantallaResultado
 from screens.pantalla_transicion import PantallaTransicion
+
+# Configurar logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 
 
@@ -47,6 +57,13 @@ def iniciar_musica_fondo():
     print("No se pudo cargar la musica de fondo.")
 
 def main():
+    # Inicializar manager de multiprocesamiento
+    manager = obtener_manager()
+    logger.info("Iniciando aplicación con multiprocesamiento")
+    
+    # Registrar limpieza al salir
+    atexit.register(limpiar_manager)
+    
     pygame.mixer.pre_init(44100, -16, 2, 512)
     pygame.init()
     iniciar_musica_fondo()
@@ -202,6 +219,8 @@ def main():
         pygame.display.flip()
 
     pygame.quit()
+    limpiar_manager()
+    logger.info("Aplicación cerrada correctamente")
     sys.exit()
 
 

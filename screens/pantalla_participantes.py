@@ -2,11 +2,15 @@
 
 import os
 import unicodedata
+import logging
 
 import pygame
 
 import config
-from core.generar_arbol_manual import cargar_personas
+from core.generar_arbol_manual import (
+    cargar_personas,
+    cargar_personas_paralelo,
+)
 from ui.estilo import (
     COLOR_ACENTO,
     COLOR_BORDE,
@@ -18,6 +22,8 @@ from ui.estilo import (
     dibujar_fondo_tecnologico,
     dibujar_panel,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class PantallaParticipantes:
@@ -242,7 +248,15 @@ class PantallaParticipantes:
         return None
 
     def _cargar_personajes(self):
-        personas = cargar_personas(self.ruta_csv)
+        try:
+            personas = cargar_personas_paralelo(
+                self.ruta_csv,
+                usar_multiprocesamiento=True
+            )
+        except Exception as e:
+            logger.warning(f"Error en carga paralela: {e}, usando carga secuencial")
+            personas = cargar_personas(self.ruta_csv)
+        
         personajes = []
 
         for persona in personas:

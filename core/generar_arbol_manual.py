@@ -28,6 +28,13 @@ export_graphviz ni sklearn.tree de ninguna forma).
 
 import os
 import pandas as pd
+from multiprocessing import Pool
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+import logging
+
+# Configurar logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # graphviz es opcional: solo hace falta si se quiere generar las imagenes
 # (arbol_akinator.png, grafo_G1.png, etc.) llamando a main(). El juego en
@@ -118,7 +125,75 @@ def cargar_personas(ruta_datos):
     return personas
 
 
-def pregunta_separa(personas, col_excel):
+# ---------------------------------------------------------------------------
+# Optimizacion: Procesamiento paralelo de personas
+# ---------------------------------------------------------------------------
+
+def _procesar_persona_worker(args):
+    """Worker para procesamiento paralelo de personas.
+    Función estática para poder ser serializada por multiprocessing."""
+    
+    fila_dict, columna_nombre, preguntas, persona_excluida = args
+    
+    nombre_crudo = fila_dict.get(columna_nombre, "")
+    if pd.isna(nombre_crudo):
+        return None
+    
+    nombre = " ".join(str(nombre_crudo).split())
+    
+    if persona_excluida.lower() in nombre.lower():
+        return None
+    
+    persona = {"nombre": nombre}
+    for col_excel, _etiqueta in preguntas:
+        valor = fila_dict.get(col_excel.strip(), fila_dict.get(col_excel, ""))
+        if pd.isna(valor):
+            valor = ""
+        valor = str(valor).strip().lower()
+        persona[col_excel] = valor
+    
+    return persona
+
+
+def cargar_personas_paralelo(ruta_datos, usar_multiprocesamiento=True):
+    """Lee el archivo de respuestas usando multiprocesamiento si está disponible.
+    
+    Args:
+        ruta_datos: ruta al archivo (CSV o XLSX)
+        usar_multiprocesamiento: si False, usa el método secuencial
+    
+    Returns:
+        lista de diccionarios con personas procesadas
+    """
+    
+    extension = os.path.splitext(ruta_datos)[1].lower()
+    if extension == ".csv":
+        df = pd.read_csv(ruta_datos)
+    else:
+        df = pd.read_excel(ruta_datos)
+    
+    # Normalizar nombres de columnas
+    df.columns = [str(c).strip() if not isinstance(c, str) else c.strip() for c in df.columns]
+    
+    if not usar_multiprocesamiento or len(df) < 20:
+        # Para conjuntos pequeños, es más rápido secuencial
+        return cargar_personas(ruta_datos)
+    
+    # Preparar argumentos para workers
+    filas_dicts = [dict(fila) for _, fila in df.iterrows()]
+    args_lista = [
+        (fila_dict, COLUMNA_NOMBRE, PREGUNTAS, PERSONA_EXCLUIDA)
+        for fila_dict in filas_dicts
+    ]
+    
+    # Usar ThreadPoolExecutor (mejor para I/O, evita problemas de serialización)
+    personas = []
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        resultados = executor.map(_procesar_persona_worker, args_lista)
+        personas = [p for p in resultados if p is not None]
+    
+    logger.info(f"Cargadas {len(personas)} personas con multiprocesamiento")
+    return personas
     """Devuelve True si la pregunta 'col_excel' divide a 'personas' en dos
     grupos no vacios (SI / NO). Si todos responden igual, no separa nada."""
     tiene_si = any(p[col_excel] == "si" for p in personas)
@@ -274,9 +349,68 @@ def crear_nodo_grupo_indistinguible(personas, grafo_arbol):
     return id_nodo
 
 
-def construir_arbol(personas, indice_pregunta, grafo):
+# ---------------------------------------------------------------------------
+# Optimizacion: Generación paralela de gráficos
+# ---------------------------------------------------------------------------
+
+def _generar_grafo_worker(args):
+    """Worker para generar gráficos en paralelo."""
+    numero_grupo, etiqueta_grupo, nombres = args
+    
+    if not GRAPHVIZ_DISPONIBLE:
+        return None
+    
+    try:
+        dibujo = graphviz.Graph(format="png")
+        dibujo.attr("node", fontname="Helvetica", fontsize="11", shape="ellipse",
+                    style="filled", fillcolor="#ffe0b2")
+        dibujo.attr("edge", fontname="Helvetica", fontsize="10")
+        
+        for nombre in nombres:
+            dibujo.node(nombre, nombre)
+        
+        for i in range(len(nombres)):
+            for j in range(i + 1, len(nombres)):
+                origen, destino = nombres[i], nombres[j]
+                dibujo.edge(origen, destino)
+        
+        nombre_archivo = f"grafo_{etiqueta_grupo}"
+        dibujo.render(filename=nombre_archivo, cleanup=True)
+        return f"{nombre_archivo}.png"
+    except Exception as e:
+        logger.error(f"Error generando grafo {etiqueta_grupo}: {e}")
+        return None
+
+
+def generar_graficos_paralelo(grupos_para_generar):
+    """Genera múltiples gráficos de grupos en paralelo.
+    
+    Args:
+        grupos_para_generar: lista de tuplas (numero, etiqueta, nombres)
+    
+    Returns:
+        lista de rutas de archivos generados
+    """
+    
+    if not GRAPHVIZ_DISPONIBLE or not grupos_para_generar:
+        return []
+    
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        resultados = list(executor.map(_generar_grafo_worker, grupos_para_generar))
+    
+    return [r for r in resultados if r is not None]
+
+
+def construir_arbol(personas, indice_pregunta, grafo, generar_graficos_en_paralelo=True):
     """Construye recursivamente el arbol de decision como IMAGEN
-    (graphviz.Digraph). Devuelve el id del nodo creado (raiz del subarbol)."""
+    (graphviz.Digraph). Devuelve el id del nodo creado (raiz del subarbol).
+    
+    Args:
+        personas: lista de personas
+        indice_pregunta: índice de pregunta actual
+        grafo: objeto graphviz.Digraph
+        generar_graficos_en_paralelo: si True, genera gráficos en threads paralelos
+    """
 
     if len(personas) == 1:
         id_nodo = nuevo_id()
@@ -310,8 +444,8 @@ def construir_arbol(personas, indice_pregunta, grafo):
         fillcolor="#bbdefb",
     )
 
-    id_si = construir_arbol(grupo_si, indice + 1, grafo)
-    id_no = construir_arbol(grupo_no, indice + 1, grafo)
+    id_si = construir_arbol(grupo_si, indice + 1, grafo, generar_graficos_en_paralelo)
+    id_no = construir_arbol(grupo_no, indice + 1, grafo, generar_graficos_en_paralelo)
 
     grafo.edge(id_nodo, id_si, label="Si")
     grafo.edge(id_nodo, id_no, label="No")
