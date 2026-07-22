@@ -162,13 +162,6 @@ class PantallaResultado:
         )
 
     def _obtener_nombre_corto(self, nombre_completo):
-        """
-        Devuelve el primer nombre y el primer apellido.
-
-        Ejemplo:
-        Tabatha Naomi Peñaloza Orellana
-        -> Tabatha Peñaloza
-        """
 
         partes = str(nombre_completo).strip().split()
 
@@ -251,10 +244,6 @@ class PantallaResultado:
         ancho_maximo,
         alto_maximo
     ):
-        """
-        Escala la imagen conservando su proporción.
-        Nunca la estira ni la aplasta.
-        """
 
         ancho_original = imagen.get_width()
         alto_original = imagen.get_height()

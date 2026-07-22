@@ -15,7 +15,6 @@ from ui.estilo import (
     dibujar_panel,
 )
 
-
 class PantallaAcercaDe:
     def __init__(self, gestor):
         self.gestor = gestor

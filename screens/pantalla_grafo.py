@@ -177,12 +177,6 @@ class PantallaGrafo:
         self.fallo_localizacion = False
 
     def _nombre_corto(self, nombre_completo):
-        """
-        Obtiene primer nombre y primer apellido.
-
-        Andrea Nicol Cumbal Gordon
-        -> Andrea Cumbal
-        """
 
         partes = str(nombre_completo).strip().split()
 
@@ -198,10 +192,6 @@ class PantallaGrafo:
         return ""
 
     def _obtener_posiciones_nodos(self):
-        """
-        Devuelve posiciones centradas según
-        la cantidad de candidatos.
-        """
 
         cantidad = len(self.candidatos_empatados)
 
@@ -372,10 +362,6 @@ class PantallaGrafo:
         centro_y,
         ancho_maximo
     ):
-        """
-        Divide una pregunta larga en varias líneas.
-        """
-
         palabras = texto.split()
         lineas = []
         linea_actual = ""
