@@ -5,7 +5,7 @@ from core.multiprocesamiento import ManagerMultiprocesamiento
 # Esta función simula una tarea que le toma tiempo al procesador
 def calcular_test(numero):
     # Forzamos un retraso de 4 segundos para congelar el proceso y poder verlo
-    time.sleep(4)
+    time.sleep(8)
     return numero * numero
 
 if __name__ == "__main__":

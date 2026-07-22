@@ -4,6 +4,8 @@ from pathlib import Path
 import sys
 import atexit
 import logging
+import multiprocessing
+
 
 import pygame
 
@@ -225,4 +227,5 @@ def main():
 
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support() 
     main()
