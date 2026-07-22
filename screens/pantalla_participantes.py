@@ -3,9 +3,7 @@
 import os
 import unicodedata
 import logging
-
 import pygame
-
 import config
 from core.generar_arbol_manual import (
     cargar_personas,
@@ -184,13 +182,6 @@ class PantallaParticipantes:
         )
 
     def _nombre_corto(self, nombre):
-        """
-        Primer nombre + primer apellido.
-
-        Andrea Nicol Cumbal Gordon
-        -> Andrea Cumbal
-        """
-
         partes = str(nombre).strip().split()
 
         if len(partes) >= 3:

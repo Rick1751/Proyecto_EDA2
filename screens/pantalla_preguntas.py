@@ -228,13 +228,6 @@ class PantallaPreguntas:
     # --------------------------------------------------
 
     def _formatear_pregunta(self, pregunta):
-        """
-        Convierte las preguntas originales del árbol
-        a una redacción uniforme con 'tu personaje'.
-
-        Ejemplo:
-        'Eres mujer?' -> '¿Tu personaje es mujer?'
-        """
 
         pregunta = str(pregunta).strip()
 

@@ -2,9 +2,7 @@
 
 import math
 import sys
-
 import pygame
-
 import config
 
 
@@ -272,7 +270,6 @@ class PantallaInicio:
             )
 
     def _dibujar_globo(self, pantalla):
-        # Más pequeño y más abajo para no tapar el título
         centro = (
             config.ANCHO // 2,
             205
@@ -667,11 +664,8 @@ class PantallaInicio:
 
     def dibujar(self, pantalla):
         self._dibujar_fondo(pantalla)
-
-        # Globo primero para que quede detrás
         self._dibujar_globo(pantalla)
 
-        # Título
         texto_titulo = self.fuente_titulo.render(
             "Sapómetro",
             True,
