@@ -4,8 +4,6 @@ import multiprocessing
 from core.multiprocesamiento import ManagerMultiprocesamiento
 
 def tarea_pesada_cpu(numero):
-    # Simula un cálculo matemático intensivo para estresar el procesador
-    # Esto medirá el poder bruto de procesamiento de cada máquina
     inicio = time.time()
     while time.time() - inicio < 0.5:
         _ = 12345 * 67890
@@ -45,7 +43,6 @@ if __name__ == "__main__":
     print(f"      -> Tiempo Paralelo: {tiempo_paralelo:.2f} segundos\n")
     
     # --- MÉTRICAS DE COMPARACIÓN ---
-    # Cuántas veces es más rápida esta computadora gracias al multiprocesamiento
     factor_aceleracion = tiempo_secuencial / tiempo_paralelo
     # Eficiencia de uso de los núcleos asignados
     eficiencia = (factor_aceleracion / procesos_asignados) * 100

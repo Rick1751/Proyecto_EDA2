@@ -1,10 +1,3 @@
-"""
-boton.py
-
-Clase chiquita para representar un boton clicable en Pygame. Se usa en
-varias pantallas (inicio, preguntas, grafo, resultado) para no repetir una
-y otra vez el mismo codigo de "dibujar un rectangulo + detectar el clic".
-"""
 
 import pygame
 import config
